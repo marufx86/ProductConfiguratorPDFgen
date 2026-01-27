@@ -88,6 +88,24 @@ public:
 	);
 
 	/**
+	 * Export only the selected variants from BP_Configurator to PDF
+	 * Reads currentIndex from ObjectVariantSets array to export only selected variants
+	 * @param ConfiguratorActor The BP_Configurator actor containing selected variant data
+	 * @param ConfigurationName Custom name for the configuration (optional)
+	 * @param Success Whether the export succeeded
+	 * @param PDFOutputPath Path to the generated PDF file
+	 * @param ErrorMessage Error message if export failed
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Configuration|Export")
+	static void ExportSelectedVariantsToPDF(
+		AActor* ConfiguratorActor,
+		const FString& ConfigurationName,
+		bool& Success,
+		FString& PDFOutputPath,
+		FString& ErrorMessage
+	);
+
+	/**
 	 * Get current timestamp as formatted string
 	 * @return Timestamp string in YYYY-MM-DD_HH-MM-SS format
 	 */

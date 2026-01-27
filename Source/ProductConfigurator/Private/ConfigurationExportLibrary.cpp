@@ -26,7 +26,8 @@ void UConfigurationExportLibrary::ExportConfigurationToJSON(
 	Success = false;
 
 	// Build file path
-	FString SaveDir = FPaths::ProjectSavedDir() / TEXT("Configurations");
+	// Use ProjectDir/Saved to ensure it goes to the project, not engine folder
+	FString SaveDir = FPaths::ProjectDir() / TEXT("Saved/Configurations");
 	FString FileName = ConfigurationName.IsEmpty() 
 		? FString::Printf(TEXT("Config_%s.json"), *GetFormattedTimestamp())
 		: FString::Printf(TEXT("%s_%s.json"), *ConfigurationName, *GetFormattedTimestamp());
@@ -88,7 +89,8 @@ void UConfigurationExportLibrary::GeneratePDFFromJSON(
 	}
 
 	// Build PDF output path
-	FString PDFDir = FPaths::ProjectSavedDir() / TEXT("PDFs");
+	// Use ProjectDir/Saved to ensure it goes to the project, not engine folder
+	FString PDFDir = FPaths::ProjectDir() / TEXT("Saved/PDFs");
 	FString BaseFileName = FPaths::GetBaseFilename(JsonFilePath);
 	PDFOutputPath = PDFDir / (BaseFileName + TEXT(".pdf"));
 
@@ -186,7 +188,8 @@ void UConfigurationExportLibrary::ExportVariantSetsToPDF(
 	}
 
 	// Get the LevelVariantSets asset
-	ULevelVariantSets* VariantSets = LevelVariantSetsActor->GetLevelVariantSets();
+	// Pass true to load the asset if it's not already loaded
+	ULevelVariantSets* VariantSets = LevelVariantSetsActor->GetLevelVariantSets(true);
 	if (!VariantSets)
 	{
 		ErrorMessage = TEXT("No LevelVariantSets asset found in the actor.");
@@ -213,20 +216,153 @@ void UConfigurationExportLibrary::ExportVariantSetsToPDF(
 			FString VariantSetName = VariantSet->GetDisplayText().ToString();
 			int32 NumVariants = VariantSet->GetNumVariants();
 			
+			// Find the active variant in this set
+			FString ActiveVariantName = TEXT("None");
 			for (int32 j = 0; j < NumVariants; ++j)
 			{
 				UVariant* Variant = VariantSet->GetVariant(j);
-				if (Variant)
+				// Only collect if this variant is active
+				if (Variant && Variant->IsActive())
 				{
-					FString VariantName = Variant->GetDisplayText().ToString();
-					FString FullVariantPath = VariantSetName + TEXT(" > ") + VariantName;
-					ConfigData.SelectedVariants.Add(FullVariantPath);
+					ActiveVariantName = Variant->GetDisplayText().ToString();
+					break; // Found the active one, stop
+				}
+			}
+			// Add variant set with its active variant
+			FString FullVariantPath = VariantSetName + TEXT(": ") + ActiveVariantName;
+			ConfigData.SelectedVariants.Add(FullVariantPath);
+		}
+		}
+
+	UE_LOG(LogTemp, Log, TEXT("Collected %d variants"), ConfigData.SelectedVariants.Num());
+
+	// Export to JSON
+	FString JsonFilePath;
+	bool JsonSuccess = false;
+	ExportConfigurationToJSON(ConfigData, ConfigData.ConfigurationName, JsonSuccess, JsonFilePath);
+
+	if (!JsonSuccess)
+	{
+		ErrorMessage = TEXT("Failed to export configuration to JSON");
+		return;
+	}
+
+	// Generate PDF from JSON
+	GeneratePDFFromJSON(JsonFilePath, Success, PDFOutputPath, ErrorMessage);
+}
+
+void UConfigurationExportLibrary::ExportSelectedVariantsToPDF(
+	AActor* ConfiguratorActor,
+	const FString& ConfigurationName,
+	bool& Success,
+	FString& PDFOutputPath,
+	FString& ErrorMessage)
+{
+	Success = false;
+	PDFOutputPath = TEXT("");
+	ErrorMessage = TEXT("");
+
+	// Validate input
+	if (!ConfiguratorActor)
+	{
+		ErrorMessage = TEXT("ConfiguratorActor is null");
+		UE_LOG(LogTemp, Error, TEXT("%s"), *ErrorMessage);
+		return;
+	}
+
+	// Prepare configuration data
+	FConfigurationData ConfigData;
+	ConfigData.ConfigurationName = ConfigurationName.IsEmpty() ? TEXT("ProductConfiguration") : ConfigurationName;
+	ConfigData.Timestamp = GetFormattedTimestamp();
+	ConfigData.SelectedEnvironment = TEXT("Default");
+	ConfigData.SelectedCamera = TEXT("Default");
+
+	// Use reflection to access BP_Configurator properties
+	UClass* ActorClass = ConfiguratorActor->GetClass();
+
+	// Get ObjectVariantSets array property
+	FProperty* ObjectVariantSetsProperty = ActorClass->FindPropertyByName(TEXT("ObjectVariantSets"));
+	if (ObjectVariantSetsProperty)
+	{
+		FArrayProperty* ArrayProperty = CastField<FArrayProperty>(ObjectVariantSetsProperty);
+		if (ArrayProperty)
+		{
+			FScriptArrayHelper ArrayHelper(ArrayProperty, ArrayProperty->ContainerPtrToValuePtr<void>(ConfiguratorActor));
+			FStructProperty* InnerStructProperty = CastField<FStructProperty>(ArrayProperty->Inner);
+
+			if (InnerStructProperty)
+			{
+				for (int32 i = 0; i < ArrayHelper.Num(); ++i)
+				{
+					void* StructData = ArrayHelper.GetRawPtr(i);
+
+					// Get VariantSet property (first property in STRUCT_VarSet)
+					FProperty* VariantSetProperty = InnerStructProperty->Struct->FindPropertyByName(TEXT("VariantSet_5_53DD780140AA80DE303F9FB135D2EA55"));
+					FProperty* CurrentIndexProperty = InnerStructProperty->Struct->FindPropertyByName(TEXT("currentIndex_2_CE1166BB489772853E83B4987669778D"));
+
+					if (VariantSetProperty && CurrentIndexProperty)
+					{
+						FObjectProperty* ObjProperty = CastField<FObjectProperty>(VariantSetProperty);
+						FIntProperty* IntProperty = CastField<FIntProperty>(CurrentIndexProperty);
+
+						if (ObjProperty && IntProperty)
+						{
+							UVariantSet* VariantSet = Cast<UVariantSet>(ObjProperty->GetObjectPropertyValue_InContainer(StructData));
+							int32 CurrentIndex = IntProperty->GetPropertyValue_InContainer(StructData);
+
+							if (VariantSet && CurrentIndex >= 0 && CurrentIndex < VariantSet->GetNumVariants())
+							{
+								UVariant* SelectedVariant = VariantSet->GetVariant(CurrentIndex);
+								if (SelectedVariant)
+								{
+									FString VariantSetName = VariantSet->GetDisplayText().ToString();
+									FString VariantName = SelectedVariant->GetDisplayText().ToString();
+									FString FullPath = VariantSetName + TEXT(" > ") + VariantName;
+									ConfigData.SelectedVariants.Add(FullPath);
+								}
+							}
+						}
+					}
 				}
 			}
 		}
 	}
 
-	UE_LOG(LogTemp, Log, TEXT("Collected %d variants"), ConfigData.SelectedVariants.Num());
+	// Get EnviroVarSet property
+	FProperty* EnviroVarSetProperty = ActorClass->FindPropertyByName(TEXT("EnviroVarSet"));
+	if (EnviroVarSetProperty)
+	{
+		FStructProperty* StructProperty = CastField<FStructProperty>(EnviroVarSetProperty);
+		if (StructProperty)
+		{
+			void* StructData = StructProperty->ContainerPtrToValuePtr<void>(ConfiguratorActor);
+			FProperty* VariantSetProperty = StructProperty->Struct->FindPropertyByName(TEXT("VariantSet_5_53DD780140AA80DE303F9FB135D2EA55"));
+			FProperty* CurrentIndexProperty = StructProperty->Struct->FindPropertyByName(TEXT("currentIndex_2_CE1166BB489772853E83B4987669778D"));
+
+			if (VariantSetProperty && CurrentIndexProperty)
+			{
+				FObjectProperty* ObjProperty = CastField<FObjectProperty>(VariantSetProperty);
+				FIntProperty* IntProperty = CastField<FIntProperty>(CurrentIndexProperty);
+
+				if (ObjProperty && IntProperty)
+				{
+					UVariantSet* VariantSet = Cast<UVariantSet>(ObjProperty->GetObjectPropertyValue_InContainer(StructData));
+					int32 CurrentIndex = IntProperty->GetPropertyValue_InContainer(StructData);
+
+					if (VariantSet && CurrentIndex >= 0)
+					{
+						UVariant* SelectedVariant = VariantSet->GetVariant(CurrentIndex);
+						if (SelectedVariant)
+						{
+							ConfigData.SelectedEnvironment = SelectedVariant->GetDisplayText().ToString();
+						}
+					}
+				}
+			}
+		}
+	}
+
+	UE_LOG(LogTemp, Log, TEXT("Collected %d selected variants"), ConfigData.SelectedVariants.Num());
 
 	// Export to JSON
 	FString JsonFilePath;
