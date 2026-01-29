@@ -17,4 +17,4 @@ void FProductConfiguratorModule::ShutdownModule()
 
 #undef LOCTEXT_NAMESPACE
 	
-IMPLEMENT_MODULE(FProductConfiguratorModule, ProductConfigurator)
+IMPLEMENT_PRIMARY_GAME_MODULE(FProductConfiguratorModule, ProductConfigurator, "ProductConfigurator");
