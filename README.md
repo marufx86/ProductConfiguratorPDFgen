@@ -1,1253 +1,1404 @@
-# Product Configurator - Complete Technical Documentation
+# Product Configurator - Complete Beginner's Guide
 
- > **Welcome!** This guide provides comprehensive documentation for complete beginners AND advanced users. Every technical detail is explained with verification steps.
+ > **Welcome!** This guide assumes you're brand new to Unreal Engine. Every step is explained in detail with screenshots descriptions and tips.
 
  ---
 
-## 🔧 System Requirements & Prerequisites
-
-### Critical Dependencies Overview
-
-This project has **three core dependencies** that must be configured correctly:
-
-| Component | Version Required | Purpose | Critical? |
-|-----------|-----------------|---------|----------|
-| **Unreal Engine** | 5.5.4 | Main application runtime | ✅ Yes |
-| **Python** | 3.8+ | PDF generation system | ✅ Yes |
-| **Visual Studio** | 2022 | C++ code compilation | ⚠️ For modifications only |
-
----
-
-## 🐍 Python Environment Setup (CRITICAL)
-
-### Why Python Is Required
-
-This project generates **PDF reports** from JSON configuration data using a **custom Python script** that:
-- Reads variant selection data exported from Unreal Engine
-- Constructs PDF documents using raw PDF specification format (PDF 1.4)
-- Saves reports to disk for customer/production use
-
-**Without Python configured correctly, PDF exports will fail silently.**
-
-### Architecture: How Python Integrates With Unreal
-
-```mermaid
-flowchart LR
-    A[User Clicks Export] --> B[Unreal Engine Blueprint]
-    B --> C[C++ Export Library]
-    C --> D[Generate JSON File]
-    D --> E[Call Python Script]
-    E --> F[generate_pdf.py]
-    F --> G[Parse JSON]
-    G --> H[Build PDF Structure]
-    H --> I[Write PDF File]
-    I --> J[PDF Saved to Disk]
-    
-    style A fill:#4a90e2,stroke:#2171b5,color:#fff
-    style F fill:#d15858,stroke:#e74c3c,color:#fff
-    style J fill:#41a161,stroke:#228b22,color:#fff
-```
-
----
-
-### Step 1: Install Python
-
-#### Download & Installation
-
-1. **Download Python 3.8 or newer**
-   - Official site: https://www.python.org/downloads/
-   - For Windows: Download "Windows installer (64-bit)"
-   - Recommended: Python 3.11.x (current stable)
-
-2. **CRITICAL: During Installation**
-   - ✅ **CHECK** the box: "Add Python to PATH"
-   - ✅ **CHECK** the box: "Add Python to environment variables"
-   - ⚠️ This is THE MOST IMPORTANT STEP
-   - This allows Unreal Engine's subprocess system to find and execute Python
-
-3. **Choose installation location**
-   - Default: `C:\Users\<YourName>\AppData\Local\Programs\Python\Python3xx\`
-   - Or custom: `C:\Python3xx\` (easier to remember)
-
-4. **Complete installation** (takes 2-3 minutes)
-
-5. **Why PATH matters:**
-   - When Unreal calls Python, it doesn't know where Python is installed
-   - PATH tells Windows: "Python.exe is located at X"
-   - Without PATH, you'll get: `FileNotFoundError: python.exe not found`
-
----
-
-### Step 2: Verify Python Installation
-
-#### Command Prompt Verification
-
-1. **Open Command Prompt:**
-   - Press `Windows Key + R`
-   - Type: `cmd`
-   - Press Enter
-   - You'll see a black window with white text
-
-2. **Test 1: Check Python Version**
-   ```bash
-   python --version
-   ```
-   
-   **Expected output:**
-   ```
-   Python 3.11.8
-   ```
-   (Your version number may differ - any 3.8+ is acceptable)
-
-3. **Test 2: Alternative Python Command**
-   
-   Some Windows installations use `py` launcher:
-   ```bash
-   py --version
-   ```
+ ## 📚 Table of Contents
+
+ ### Part 1: Getting Started (For Complete Beginners)
+ 1. [What Is This Project?](#what-is-this-project)
+ 2. [What You'll Need](#what-youll-need)
+ 3. [Installing Unreal Engine](#installing-unreal-engine)
+ 4. [Opening The Project](#opening-the-project)
+ 5. [Understanding The Interface](#understanding-the-interface)
+ 6. [Your First Export Test](#your-first-export-test)
+
+ ### Part 2: Understanding The System
+ 7. [How The Configurator Works](#how-the-configurator-works)
+ 8. [What Are Variant Sets?](#what-are-variant-sets)
+ 9. [What Does The Export Do?](#what-does-the-export-do)
 
-4. **Test 3: Verify Standard Library**
-   ```bash
-   python -c "import json, sys, os; print('Python standard library: OK')"
-   ```
-   
-   **Expected output:**
-   ```
-   Python standard library: OK
-   ```
+ ### Part 3: Customizing For Your Product
+ 10. [Swapping The Guitar Model For A Car (Or Any Product)](#swapping-the-guitar-model-for-a-car)
+ 11. [Adding New Variant Sets](#adding-new-variant-sets)
+ 12. [Removing Variant Sets](#removing-variant-sets)
+ 13. [Editing Existing Variants](#editing-existing-variants)
+ 14. [Organizing Your Project](#organizing-your-project)
 
-5. **Test 4: Check Python Executable Location**
-   ```bash
-   where python
-   ```
-   
-   **Expected output:**
-   ```
-   C:\Users\<YourName>\AppData\Local\Programs\Python\Python311\python.exe
-   ```
+ ### Part 4: Advanced Customization
+ 15. [Changing Where PDFs Are Saved](#changing-where-pdfs-are-saved)
+ 16. [Changing File Names](#changing-file-names)
+ 17. [Customizing The PDF Layout](#customizing-the-pdf-layout)
 
-#### Troubleshooting Python Installation
+ ### Part 5: Troubleshooting & Help
+ 18. [Common Problems & Solutions](#common-problems--solutions)
+ 19. [Where To Get Help](#where-to-get-help)
 
-**Error:** `'python' is not recognized as an internal or external command`
+ ---
 
-**Cause:** Python is NOT in your system PATH
+ ## Part 1: Getting Started (For Complete Beginners)
 
-**Solution Option A - Reinstall (Recommended):**
-1. Uninstall Python (Settings → Apps → Python → Uninstall)
-2. Reinstall and CHECK "Add Python to PATH"
-3. Restart computer
-4. Test again
+ ---
 
-**Solution Option B - Manual PATH Configuration:**
+ ### What Is This Project?
 
-1. Find your Python installation directory:
-   - Common locations:
-     - `C:\Users\<YourName>\AppData\Local\Programs\Python\Python3xx\`
-     - `C:\Python3xx\`
+ This is a **Product Configurator** built in Unreal Engine. Think of it like a 3D customizer you might see on a car manufacturer's website, but it runs in real-time 3D.
 
-2. Add Python to PATH:
-   - **Windows 10/11:**
-     - Right-click "This PC" → Properties
-     - Click "Advanced system settings"
-     - Click "Environment Variables"
-     - Find "Path"
-     - Click "Edit"
-     - Click "New"
-     - Add Python directory (e.g., `C:\Python311\`)
-     - Add Scripts directory (e.g., `C:\Python311\Scripts\`)
-     - Click OK on all dialogs
+ **What it does:**
+ - Shows a 3D product (currently a guitar)
+ - Lets users customize different parts (color, shape, accessories)
+ - Exports a PDF report showing what was selected
+ - Can be adapted for ANY product (cars, furniture, clothing, etc.)
 
-3. **Restart Command Prompt** (or restart computer)
-4. Test with `python --version`
+ **Current Setup:**
+ - **Product:** Guitar
+ - **11 Customization Options:** Lighting, Camera, Body Shape, Body Color, Hardware, Head Shape, Pickups, Pick Guard, Fret Inlays, Fret Board, Tremolo
 
----
+ ---
 
-### Step 3: Verify PATH Configuration
+ ### What You'll Need
 
-#### What is PATH?
+ #### Required Software (All Free*)
 
-PATH is a **system environment variable** that tells Windows where to find executable programs.
+ 1. **Unreal Engine 5.5.4**
+    - Download from: Epic Games Launcher
+    - Size: ~40GB
+    - *Free for learning/evaluation
 
-Think of it like a phone's contact list:
-- Without PATH: You have to dial the full number every time
-- With PATH: You can just say "Call Python" and it knows where to find it
+ 2. **Visual Studio 2022 Community Edition** (for C++ editing)
+    - Download from: https://visualstudio.microsoft.com/
+    - Size: ~10GB
+    - *Free for individuals
+    - **Important:** When installing, select "Game Development with C++" workload
 
-#### Check Current PATH
-
-1. Open Command Prompt
-2. Type:
-   ```bash
-   echo %PATH%
-   ```
-
-3. Look for entries containing:
-   - `...\Python3xx\`
-   - `...\Python3xx\Scripts\`
-
-**Example output (partial):**
-```
-C:\Windows\system32;C:\Python311;C:\Python311\Scripts;...
-```
-
-#### Verify Python Paths Exist
-
-```bash
-dir "C:\Users\<YourName>\AppData\Local\Programs\Python\Python311\python.exe"
-```
-
-If file exists, you'll see file information. If not, wrong path.
-
----
-
-### Python Dependencies (IMPORTANT: None Required!)
-
-#### What This Project Does NOT Use
-
-❌ **ReportLab** - Not used  
-❌ **FPDF** - Not used  
-❌ **PyPDF2** - Not used  
-❌ **Pillow** - Not used  
-❌ **Any external libraries** - Not used  
+ 3. **Python 3.x** (for PDF generation)
+    - Download from: https://www.python.org/downloads/
+    - Size: ~100MB
+    - *Free and open source
+    - **Important:** Check "Add Python to PATH" during installation
+
+ #### Your Computer Should Have:
+ - **CPU:** Modern quad-core or better
+ - **RAM:** 16GB minimum (32GB recommended)
+ - **GPU:** NVIDIA GTX 1070 or AMD equivalent or better
+ - **Storage:** 100GB free space (SSD recommended)
+ - **OS:** Windows 10/11 (64-bit)
 
-**No `pip install` commands are needed!**
+ ---
 
-#### What This Project DOES Use
+ ### Installing Unreal Engine
 
-✅ **Standard Python Libraries** (Built into Python):
-
-```python
-import json      # Parse configuration data from Unreal
-import sys       # Command-line arguments (file paths)
-import os        # File system operations (create directories)
-import datetime  # Timestamps (only in Unreal Python scripts)
-```
-
-These are **always included** with any Python installation.
-
-#### Why Custom PDF Generation?
-
-**This project generates PDFs manually using raw PDF specification format (PDF 1.4).**
-
-**Benefits:**
-- ✅ No external dependencies
-- ✅ Simpler deployment
-- ✅ Faster execution (no library loading)
-- ✅ Complete control over PDF structure
-- ✅ Works on any machine with Python
-
-**How it works:**
-
-The script (`Scripts/generate_pdf.py`) writes PDF files by:
-1. Constructing PDF objects (Catalog, Pages, Page, Content Stream)
-2. Defining fonts (Helvetica, Helvetica-Bold)
-3. Positioning text with PDF operators (`Tf`, `Td`, `Tj`)
-4. Building cross-reference table
-5. Writing to file as binary
-
-**Example PDF structure generated:**
-```
-%PDF-1.4
-1 0 obj
-<< /Type /Catalog /Pages 2 0 R >>
-endobj
-2 0 obj
-<< /Type /Pages /Kids [3 0 R] /Count 1 >>
-endobj
-...
-```
-
-This is **lower-level** than ReportLab but gives complete control.
-
----
-
-## 📚 Table of Contents
-
-### Part 0: Technical Architecture (NEW)
-0. [System Architecture Overview](#system-architecture-overview)
-1. [Project Structure Deep Dive](#project-structure-deep-dive)
-2. [PDF Generation Technical Breakdown](#pdf-generation-technical-breakdown)
-3. [Blueprint to Python Data Flow](#blueprint-to-python-data-flow)
-4. [File Locations Reference](#file-locations-reference)
-
-### Part 1: Getting Started (For Complete Beginners)
-1. [What Is This Project?](#what-is-this-project)
-2. [What You'll Need](#what-youll-need)
-3. [Installing Unreal Engine](#installing-unreal-engine)
-4. [Opening The Project](#opening-the-project)
-5. [Understanding The Interface](#understanding-the-interface)
-6. [Your First Export Test](#your-first-export-test)
-
-### Part 2: Understanding The System
-7. [How The Configurator Works](#how-the-configurator-works)
-8. [What Are Variant Sets?](#what-are-variant-sets)
-9. [What Does The Export Do?](#what-does-the-export-do)
-
-### Part 3: Customizing For Your Product
-10. [Swapping The Guitar Model For A Car (Or Any Product)](#swapping-the-guitar-model-for-a-car)
-11. [Adding New Variant Sets](#adding-new-variant-sets)
-12. [Removing Variant Sets](#removing-variant-sets)
-13. [Editing Existing Variants](#editing-existing-variants)
-14. [Organizing Your Project](#organizing-your-project)
-
-### Part 4: Advanced Customization
-15. [Changing Where PDFs Are Saved](#changing-where-pdfs-are-saved)
-16. [Changing File Names](#changing-file-names)
-17. [Customizing The PDF Layout](#customizing-the-pdf-layout)
-
-### Part 5: Troubleshooting & Help
-18. [Common Problems & Solutions](#common-problems--solutions)
-19. [Where To Get Help](#where-to-get-help)
-
----
-
-## Part 0: Technical Architecture (NEW)
-
----
-
-### System Architecture Overview
-
-This project integrates **three major systems**:
-
-```mermaid
-flowchart TB
-    subgraph UE["Unreal Engine 5.5.4"]
-        A[Level Variant Sets Actor]
-        B[BP_Configurator Blueprint]
-        C[Variant Manager]
-        D[ConfigurationExportLibrary C++]
-    end
-    
-    subgraph FS["File System"]
-        E[JSON Configuration]
-        F[PDF Report]
-        G[Saved/Configurations/]
-        H[Saved/PDFs/]
-    end
-    
-    subgraph PY["Python Runtime"]
-        I[generate_pdf.py]
-        J[Standard Library]
-    end
-    
-    A -->|Variant Data| B
-    B -->|Export Command| D
-    D -->|Write| E
-    E -->|Stored in| G
-    D -->|Spawn Process| I
-    E -->|Read| I
-    I -->|Uses| J
-    I -->|Write| F
-    F -->|Stored in| H
-    C -->|Manages| A
-    
-    style UE fill:#4a90e2,stroke:#2171b5,color:#fff
-    style PY fill:#d15858,stroke:#e74c3c,color:#fff
-    style FS fill:#41a161,stroke:#228b22,color:#fff
-```
-
-#### Component Responsibilities
-
-**Unreal Engine Layer:**
-- **Level Variant Sets Actor**: Stores variant configuration
-- **Variant Manager**: UI for creating/editing variants
-- **BP_Configurator**: Manages variant selection state
-- **ConfigurationExportLibrary (C++)**: Exports data and calls Python
-
-**File System Layer:**
-- **JSON Files**: Intermediate data format
-- **PDF Files**: Final output reports
-- **Directory Structure**: Organized by timestamp
-
-**Python Layer:**
-- **generate_pdf.py**: PDF generation engine
-- **Standard Library**: File I/O, JSON parsing
-
----
-
-### Project Structure Deep Dive
-
-#### Complete File Tree
-
-```
-F:/0personal/ProductConfigurator/
-├── ProductConfigurator.uproject          # Unreal project file
-├── README.md                              # This documentation
-│
-├── Source/                                # C++ source code
-│   ├── ProductConfigurator/
-│   │   ├── Public/
-│   │   │   └── ConfigurationExportLibrary.h   # Export function declarations
-│   │   ├── Private/
-│   │   │   └── ConfigurationExportLibrary.cpp # Export implementation
-│   │   ├── ProductConfigurator.Build.cs       # Build configuration
-│   │   └── ProductConfigurator.h              # Module header
-│   └── ProductConfigurator.Target.cs       # Build target
-│
-├── Content/                               # Unreal assets
-│   ├── ProductAssets/
-│   │   ├── Meshes/                        # 3D models
-│   │   ├── Materials/                     # Material assets
-│   │   ├── Textures/                      # Texture files
-│   │   ├── Blueprints/
-│   │   │   ├── BP_Configurator.uasset     # Main configurator logic
-│   │   │   └── BP_ConfigController.uasset # Player controller
-│   │   ├── Levels/
-│   │   │   └── Main.umap                  # Main scene level
-│   │   └── VariantSet.uasset              # Variant configuration
-│   ├── ProductConfig/
-│   │   └── Blueprints/
-│   │       ├── BP_ConfigController.uasset
-│   │       └── BP_ConfigGameMode.uasset
-│   └── Python/                            # Unreal Python scripts
-│       ├── export_handler.py              # Editor-only export
-│       └── packaged_export.py             # Packaged game export
-│
-├── Scripts/                               # External Python scripts
-│   └── generate_pdf.py                    # PDF generation engine
-│
-├── Saved/                                 # Generated files (gitignored)
-│   ├── Configurations/                    # JSON exports
-│   │   └── Configuration_2026-01-28_12-34-56.json
-│   ├── PDFs/                              # PDF reports
-│   │   └── Configuration_2026-01-28_12-34-56.pdf
-│   ├── Logs/                              # Unreal logs
-│   └── Config/                            # Editor preferences
-│
-├── Config/                                # Project configuration
-│   ├── DefaultEngine.ini                  # Engine settings
-│   ├── DefaultGame.ini                    # Game settings
-│   └── DefaultEditor.ini                  # Editor settings
-│
-├── Binaries/                              # Compiled executables (generated)
-│   └── Win64/
-│       └── ProductConfigurator.exe
-│
-└── Intermediate/                          # Build artifacts (generated)
-    └── Build/
-```
-
-#### Key File Descriptions
-
-| File | Type | Purpose | Edited By |
-|------|------|---------|----------|
-| **ProductConfigurator.uproject** | JSON | Project definition | Epic Launcher |
-| **ConfigurationExportLibrary.cpp** | C++ | Export logic, Python spawning | Developer (VS) |
-| **BP_Configurator** | Blueprint | Variant management, UI | Designer (UE) |
-| **VariantSet.uasset** | Asset | Variant definitions | Designer (Variant Manager) |
-| **generate_pdf.py** | Python | PDF generation | Developer (Any editor) |
-| **export_handler.py** | Python | Unreal Python bridge | Developer (Any editor) |
-| **Main.umap** | Level | Scene layout | Designer (UE) |
-
----
-
-### PDF Generation Technical Breakdown
-
-#### System Flow Detail
-
-**Step-by-step execution:**
-
-1. **User Action** (Unreal Editor)
-   - User clicks export button in UI
-   - Or runs Python console command
-   - Or blueprint calls export function
-
-2. **Blueprint Layer** (BP_Configurator)
-   - Calls `Export Variant Sets to PDF` node
-   - Passes `LevelVariantSetsActor` reference
-   - Provides configuration name string
-
-3. **C++ Layer** (ConfigurationExportLibrary.cpp)
-   ```cpp
-   // Pseudo-code
-   ExportVariantSetsToPDF(LevelVariantSetsActor, ConfigName)
-   {
-       // 1. Extract variant data from actor
-       VariantData = ReadActiveVariants(Actor);
-       
-       // 2. Build JSON structure
-       JSON = {
-           "configurationName": ConfigName,
-           "timestamp": GetCurrentTime(),
-           "selectedVariants": VariantData,
-           "selectedEnvironment": EnvData,
-           "selectedCamera": CameraData
-       };
-       
-       // 3. Write JSON to disk
-       JSONPath = "Saved/Configurations/" + ConfigName + "_" + Timestamp + ".json";
-       WriteFile(JSONPath, JSON);
-       
-       // 4. Build PDF path
-       PDFPath = "Saved/PDFs/" + ConfigName + "_" + Timestamp + ".pdf";
-       
-       // 5. Spawn Python process
-       PythonExe = FindPythonExecutable();  // Searches PATH
-       ScriptPath = "Scripts/generate_pdf.py";
-       Arguments = [JSONPath, PDFPath];
-       
-       SpawnProcess(PythonExe, ScriptPath, Arguments);
-       
-       // 6. Wait for completion
-       WaitForProcess();
-       
-       // 7. Verify PDF exists
-       if (FileExists(PDFPath))
-           return Success;
-       else
-           return Error;
-   }
-   ```
-
-4. **Python Layer** (generate_pdf.py)
-   ```python
-   # Invoked as: python generate_pdf.py <json_path> <pdf_path>
-   
-   def generate_pdf(json_path, pdf_path):
-       # 1. Load JSON
-       with open(json_path, 'r') as f:
-           config = json.load(f)
-       
-       # 2. Extract data
-       config_name = config.get('configurationName', 'N/A')
-       timestamp = config.get('timestamp', 'N/A')
-       variants = config.get('selectedVariants', [])
-       environment = config.get('selectedEnvironment', 'N/A')
-       camera = config.get('selectedCamera', 'N/A')
-       
-       # 3. Build PDF text content
-       lines = []
-       lines.append('BT')  # Begin Text
-       lines.append('/F2 16 Tf')  # Font: Helvetica-Bold, 16pt
-       lines.append('50 750 Td')  # Position: x=50, y=750
-       lines.append('(Product Configuration Summary) Tj')
-       # ... more text operations
-       lines.append('ET')  # End Text
-       
-       # 4. Calculate stream length
-       stream = '\n'.join(lines)
-       stream_len = len(stream.encode('latin-1'))
-       
-       # 5. Build PDF structure
-       pdf = []
-       pdf.append('%PDF-1.4')  # PDF version header
-       pdf.append('1 0 obj')   # Object 1: Catalog
-       pdf.append('<< /Type /Catalog /Pages 2 0 R >>')
-       pdf.append('endobj')
-       # ... more PDF objects
-       
-       # 6. Write to file
-       os.makedirs(os.path.dirname(pdf_path), exist_ok=True)
-       with open(pdf_path, 'wb') as f:
-           f.write(('\n'.join(pdf)).encode('latin-1'))
-       
-       return True
-   ```
-
-5. **Result**
-   - PDF file created at specified path
-   - Unreal receives success/failure status
-   - User sees notification or error message
-
-#### JSON Schema
-
-**File: `Saved/Configurations/<name>_<timestamp>.json`**
-
-```json
-{
-  "configurationName": "Guitar_Configuration",
-  "timestamp": "2026-01-28 12:34:56",
-  "selectedVariants": [
-    "Lighting: NeutralWarmCold",
-    "Camera: Overview",
-    "Body Shape: Strat Type",
-    "Body Color: Black",
-    "Hardware: Chrome",
-    "Head Shape: Type A",
-    "Pickups: Black",
-    "Pick Guard: Black",
-    "Fret Inlays: Pearl",
-    "Fret Board: Light",
-    "Tremolo: On"
-  ],
-  "selectedEnvironment": "NeutralWarmCold",
-  "selectedCamera": "Overview"
-}
-```
-
-**Schema Definition:**
-
-```typescript
-interface ConfigurationExport {
-  configurationName: string;    // User-provided name
-  timestamp: string;            // Format: "YYYY-MM-DD HH:MM:SS"
-  selectedVariants: string[];   // Array of "SetName: VariantName"
-  selectedEnvironment: string;  // Active environment variant
-  selectedCamera: string;       // Active camera variant
-}
-```
-
-#### PDF Structure
-
-**PDF Objects:**
-
-```
-Object 1: Catalog       - Root of PDF document tree
-Object 2: Pages         - Collection of pages
-Object 3: Page          - Single page (8.5"x11", 612x792 points)
-Object 4: Content       - Text and graphics content stream
-```
-
-**Fonts Used:**
-- `/F1`: Helvetica (regular)
-- `/F2`: Helvetica-Bold
-
-**Text Positioning:**
-- Coordinate system: Origin at bottom-left
-- Units: Points (1/72 inch)
-- Y-axis: 0 (bottom) to 792 (top)
-- X-axis: 0 (left) to 612 (right)
-
-**Example positioning:**
-```
-50 750 Td  = Start at (50, 750) - near top-left
-0 -25 Td   = Move down 25 points
-0 -18 Td   = Move down 18 points
-```
-
----
-
-### Blueprint to Python Data Flow
-
-#### Communication Methods
-
-**Method 1: Subprocess (Current Implementation)**
-
-```mermaid
-sequenceDiagram
-    participant UE as Unreal Engine
-    participant OS as Operating System
-    participant PY as Python Process
-    participant FS as File System
-    
-    UE->>UE: Build JSON data
-    UE->>FS: Write JSON file
-    UE->>OS: Spawn python.exe
-    OS->>PY: Start process with args
-    PY->>FS: Read JSON file
-    PY->>PY: Generate PDF structure
-    PY->>FS: Write PDF file
-    PY->>OS: Exit with code 0
-    OS->>UE: Process completed
-    UE->>FS: Verify PDF exists
-    UE->>UE: Return success
-```
-
-**Advantages:**
-- Clean separation of concerns
-- Python script can be tested independently
-- No Unreal Engine dependencies in Python code
-- Easy to debug (run Python script manually)
-
-**Method 2: Unreal Python (Alternative)**
-
-Files: `Content/Python/export_handler.py`
-
-```python
-import unreal
-
-def export_config_to_json_and_pdf():
-    # Runs INSIDE Unreal Engine Python environment
-    # Has access to unreal.* modules
-    # Can directly query actors and properties
-    pass
-```
-
-**Used for:**
-- Editor-only operations
-- Direct access to Unreal objects
-- Prototyping and testing
-
-**Not used for:**
-- Packaged games (Python interpreter not included)
-- Final PDF generation (uses subprocess instead)
-
----
-
-### File Locations Reference
-
-#### Critical Paths
-
-| Type | Default Path | Configurable? | Where to Change |
-|------|-------------|---------------|----------------|
-| **JSON Exports** | `Saved/Configurations/` | ✅ Yes | `ConfigurationExportLibrary.cpp` line ~29 |
-| **PDF Exports** | `Saved/PDFs/` | ✅ Yes | `ConfigurationExportLibrary.cpp` line ~91 |
-| **Python Script** | `Scripts/generate_pdf.py` | ✅ Yes | `ConfigurationExportLibrary.cpp` line ~95 |
-| **Python Executable** | System PATH | ✅ Yes | Environment variables |
-| **Project Root** | `F:/0personal/ProductConfigurator/` | ❌ No | Determined by .uproject location |
-
-#### Path Construction
-
-**Relative Paths (Default):**
-```cpp
-FString ProjectDir = FPaths::ProjectDir();
-// Returns: "F:/0personal/ProductConfigurator/"
-
-FString SaveDir = ProjectDir + "Saved/Configurations/";
-// Results in: "F:/0personal/ProductConfigurator/Saved/Configurations/"
-```
-
-**Absolute Paths (Custom):**
-```cpp
-FString SaveDir = TEXT("F:/MyExports/JSONFiles/");
-// Fixed location, not relative to project
-```
-
-#### Environment Variables Used
-
-**Automatically detected by Unreal:**
-- `PATH` - Searches for python.exe
-- `PYTHONPATH` - (Optional) Python module search paths
-- `TEMP` / `TMP` - Temporary file storage
-
----
-
-## Part 1: Getting Started (For Complete Beginners)
-
----
-
-### What Is This Project?
-
-This is a **Product Configurator** built in Unreal Engine. Think of it like a 3D customizer you might see on a car manufacturer's website, but it runs in real-time 3D.
-
-**What it does:**
-- Shows a 3D product (currently a guitar)
-- Lets users customize different parts (color, shape, accessories)
-- Exports a PDF report showing what was selected
-- Can be adapted for ANY product (cars, furniture, clothing, etc.)
-
-**Current Setup:**
-- **Product:** Guitar
-- **11 Customization Options:** Lighting, Camera, Body Shape, Body Color, Hardware, Head Shape, Pickups, Pick Guard, Fret Inlays, Fret Board, Tremolo
-
-**Technical Implementation:**
-- **Engine:** Unreal Engine 5.5.4
-- **Variant System:** Level Variant Sets (built-in UE feature)
-- **Export System:** C++ + Python pipeline
-- **Output Format:** PDF 1.4 specification
-
----
-
-### What You'll Need
-
-#### Required Software (All Free*)
-
-1. **Unreal Engine 5.5.4**
-   - Download from: Epic Games Launcher
-   - Size: ~40GB
-   - *Free for learning/evaluation
-   - Used for: Main application runtime
-
-2. **Python 3.8+**
-   - Download from: https://www.python.org/downloads/
-   - Size: ~100MB
-   - *Free and open source
-   - Used for: PDF generation
-   - **CRITICAL:** Check "Add Python to PATH" during installation
-
-3. **Visual Studio 2022 Community Edition** (optional, for C++ editing)
-   - Download from: https://visualstudio.microsoft.com/
-   - Size: ~10GB
-   - *Free for individuals
-   - Used for: C++ code compilation
-   - **Important:** Select "Game Development with C++" workload
-
-#### Your Computer Should Have:
-- **CPU:** Modern quad-core or better
-- **RAM:** 16GB minimum (32GB recommended)
-- **GPU:** NVIDIA GTX 1070 or AMD equivalent or better
-- **Storage:** 100GB free space (SSD recommended)
-- **OS:** Windows 10/11 (64-bit)
-
-
-
----
-
-## Advanced Troubleshooting: Python Integration
-
-### Problem: PDF Not Generated
-
-#### Diagnostic Steps
-
-**Step 1: Check Python is accessible**
-```bash
-python --version
-```
-If error: Python not in PATH (see installation steps above)
-
-**Step 2: Test Python script manually**
-```bash
-cd F:\0personal\ProductConfigurator
-python Scripts\generate_pdf.py Saved\Configurations\test.json Saved\PDFs\test.pdf
-```
-
-Create test JSON first:
-```json
-{
-  "configurationName": "Test",
-  "timestamp": "2026-01-28 12:00:00",
-  "selectedVariants": ["Test: Variant"],
-  "selectedEnvironment": "Test",
-  "selectedCamera": "Test"
-}
-```
-
-**Step 3: Check Unreal Engine logs**
-```
-F:\0personal\ProductConfigurator\Saved\Logs\ProductConfigurator.log
-```
-
-Search for:
-- `ConfigurationExportLibrary` - Export function calls
-- `Python` - Python process spawning
-- `Error` - Any error messages
-
-**Step 4: Verify file permissions**
-- Ensure `Saved/` directory is writable
-- Check antivirus isn't blocking file creation
-- Run Unreal Editor as Administrator (if needed)
-
-### Problem: Python Process Spawning Fails
-
-**Symptoms:**
-- Export returns error immediately
-- Log shows: "Could not spawn Python process"
-
-**Causes & Solutions:**
-
-**Cause 1:** Python not in PATH
-- **Test:** Open CMD, type `python --version`
-- **Fix:** Add Python to PATH (see installation steps)
-
-**Cause 2:** Python executable name mismatch
-- Some systems use `python3` instead of `python`
-- **Fix:** Edit `ConfigurationExportLibrary.cpp`:
-  ```cpp
-  // Change from:
-  FString PythonExe = TEXT("python");
-  // To:
-  FString PythonExe = TEXT("python3");
-  // Or use absolute path:
-  FString PythonExe = TEXT("C:/Python311/python.exe");
-  ```
-
-**Cause 3:** Antivirus blocking subprocess
-- **Fix:** Add Unreal Editor to antivirus exclusions
-
-### Problem: PDF Generated But Corrupted
-
-**Symptoms:**
-- PDF file exists but won't open
-- "File is damaged" error
-
-**Causes & Solutions:**
-
-**Cause 1:** Text encoding issues
-- Non-ASCII characters in variant names
-- **Fix:** Use only ASCII characters in variant names
-- Or modify `generate_pdf.py` to handle UTF-8:
-  ```python
-  def escape(s):
-      s = str(s).encode('latin-1', errors='replace').decode('latin-1')
-      return s.replace('\\', '\\\\').replace('(', '\\(').replace(')', '\\)')
-  ```
-
-**Cause 2:** Python script crashed mid-write
-- Check Python script for errors
-- **Test:** Run script manually with test data
-
-### Problem: Export Works in Editor But Not in Packaged Game
-
-**Explanation:**
-Packaged games don't include Python interpreter by default.
-
-**Solution:**
-Need to package Python with the game:
-
-1. **Option A:** Include Python in game package
-   - Copy Python installation to game directory
-   - Update paths to use bundled Python
-
-2. **Option B:** Require Python installation
-   - Document Python as system requirement
-   - Installer checks for Python availability
-
-3. **Option C:** Pre-generate PDFs (recommended)
-   - Generate PDFs during packaging process
-   - Include pre-made PDFs with game
-
----
-
-## Technical Deep Dives
-
-### Deep Dive: PDF Generation Algorithm
-
-#### PDF 1.4 Specification Primer
-
-**PDF Structure (Simplified):**
-```
-%PDF-1.4                  # Header
-<Objects>                 # Numbered objects (1 0 obj, 2 0 obj, ...)
-<Cross-Reference Table>   # xref - byte offsets of objects
-<Trailer>                 # Document info and root object
-%%EOF                     # End marker
-```
-
-**Our Implementation:**
-
-```python
-def generate_pdf(json_path, pdf_path):
-    # 1. DATA LOADING
-    with open(json_path, 'r', encoding='utf-8') as f:
-        config = json.load(f)
-    
-    # 2. TEXT CONTENT GENERATION
-    # Build PDF content stream (PostScript-like language)
-    lines = []
-    lines.append('BT')  # Begin Text Block
-    
-    # Set font: /F2 = Helvetica-Bold, 16pt size
-    lines.append('/F2 16 Tf')
-    
-    # Set position: x=50 points, y=750 points (from bottom-left)
-    lines.append('50 750 Td')
-    
-    # Draw text: Tj operator
-    lines.append('(Product Configuration Summary) Tj')
-    
-    # Move text position: relative move 0 points right, 25 points down
-    lines.append('0 -25 Td /F1 11 Tf')  # Also switch to smaller regular font
-    
-    # More text operations...
-    for variant in variants:
-        lines.append(f'({escape(variant)}) Tj 0 -14 Td')
-    
-    lines.append('ET')  # End Text Block
-    
-    # 3. STREAM LENGTH CALCULATION
-    stream = '\n'.join(lines)
-    stream_bytes = stream.encode('latin-1')
-    stream_len = len(stream_bytes)
-    
-    # 4. PDF OBJECT CONSTRUCTION
-    pdf = []
-    
-    # Object 1: Catalog (root of document tree)
-    pdf.append('%PDF-1.4')
-    pdf.append('1 0 obj')
-    pdf.append('<< /Type /Catalog /Pages 2 0 R >>')
-    pdf.append('endobj')
-    
-    # Object 2: Pages collection
-    pdf.append('2 0 obj')
-    pdf.append('<< /Type /Pages /Kids [3 0 R] /Count 1 >>')
-    pdf.append('endobj')
-    
-    # Object 3: Single page
-    pdf.append('3 0 obj')
-    pdf.append('<<')
-    pdf.append('/Type /Page')
-    pdf.append('/Parent 2 0 R')
-    pdf.append('/MediaBox [0 0 612 792]')  # 8.5"x11" in points
-    pdf.append('/Contents 4 0 R')  # References content stream
-    pdf.append('/Resources <<')
-    pdf.append('/Font <<')
-    pdf.append('/F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>')
-    pdf.append('/F2 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>')
-    pdf.append('>>')
-    pdf.append('>>')
-    pdf.append('>>')
-    pdf.append('endobj')
-    
-    # Object 4: Content stream
-    pdf.append('4 0 obj')
-    pdf.append(f'<< /Length {stream_len} >>')
-    pdf.append('stream')
-    pdf.append(stream)
-    pdf.append('endstream')
-    pdf.append('endobj')
-    
-    # 5. CROSS-REFERENCE TABLE
-    # (Simplified - fixed offsets for demo)
-    pdf.append('xref')
-    pdf.append('0 5')  # 5 objects (0-4)
-    pdf.append('0000000000 65535 f')
-    pdf.append('0000000009 00000 n')
-    pdf.append('0000000058 00000 n')
-    pdf.append('0000000115 00000 n')
-    pdf.append('0000000344 00000 n')
-    
-    # 6. TRAILER
-    pdf.append('trailer')
-    pdf.append('<< /Size 5 /Root 1 0 R >>')
-    pdf.append('startxref')
-    pdf.append(str(400 + stream_len))  # Byte offset to xref table
-    pdf.append('%%EOF')
-    
-    # 7. FILE WRITING
-    os.makedirs(os.path.dirname(pdf_path), exist_ok=True)
-    with open(pdf_path, 'wb') as f:
-        pdf_content = '\n'.join(pdf)
-        f.write(pdf_content.encode('latin-1'))
-    
-    return True
-```
-
-**Why This Works:**
-- PDF readers parse the structure top-to-bottom
-- Cross-reference table allows random access to objects
-- Content stream is interpreted as drawing commands
-- Fonts are built into PDF standard (no external files needed)
-
-### Deep Dive: C++ Export Function
-
-**File:** `Source/ProductConfigurator/Private/ConfigurationExportLibrary.cpp`
-
-**Function Signature:**
-```cpp
-FExportResult UConfigurationExportLibrary::ExportVariantSetsToPDF(
-    ALevelVariantSetsActor* VariantSetsActor,
-    FString ConfigurationName
-)
-```
-
-**Implementation Overview:**
-
-```cpp
-// 1. VALIDATE INPUTS
-if (!VariantSetsActor) {
-    return FExportResult{
-        false,
-        TEXT(""),
-        TEXT("Invalid VariantSetsActor reference")
-    };
-}
-
-// 2. EXTRACT VARIANT DATA
-ULevelVariantSets* VariantSets = VariantSetsActor->GetLevelVariantSets();
-if (!VariantSets) {
-    return FExportResult{false, TEXT(""), TEXT("No VariantSets found")};
-}
-
-// Iterate through all variant sets
-TArray<FString> SelectedVariants;
-for (UVariantSet* VarSet : VariantSets->GetVariantSets()) {
-    UVariant* ActiveVariant = VarSet->GetActiveVariant();
-    if (ActiveVariant) {
-        FString VariantName = VarSet->GetDisplayText().ToString() + 
-                              ": " + 
-                              ActiveVariant->GetDisplayText().ToString();
-        SelectedVariants.Add(VariantName);
-    }
-}
-
-// 3. BUILD JSON STRUCTURE
-TSharedPtr<FJsonObject> JsonObject = MakeShared<FJsonObject>();
-JsonObject->SetStringField(TEXT("configurationName"), ConfigurationName);
-JsonObject->SetStringField(TEXT("timestamp"), FDateTime::Now().ToString());
-
-// Convert variant array to JSON array
-TArray<TSharedPtr<FJsonValue>> VariantArray;
-for (const FString& Variant : SelectedVariants) {
-    VariantArray.Add(MakeShared<FJsonValueString>(Variant));
-}
-JsonObject->SetArrayField(TEXT("selectedVariants"), VariantArray);
-
-// 4. GENERATE FILE PATHS
-FString Timestamp = FDateTime::Now().ToString(TEXT("%Y-%m-%d_%H-%M-%S"));
-FString SafeConfigName = ConfigurationName.IsEmpty() ? TEXT("Configuration") : ConfigurationName;
-
-FString JsonPath = FPaths::ProjectDir() / TEXT("Saved/Configurations") / 
-                   FString::Printf(TEXT("%s_%s.json"), *SafeConfigName, *Timestamp);
-FString PdfPath = FPaths::ProjectDir() / TEXT("Saved/PDFs") / 
-                  FString::Printf(TEXT("%s_%s.pdf"), *SafeConfigName, *Timestamp);
-
-// 5. WRITE JSON TO FILE
-FString JsonString;
-TSharedRef<TJsonWriter<>> JsonWriter = TJsonWriterFactory<>::Create(&JsonString);
-FJsonSerializer::Serialize(JsonObject.ToSharedRef(), JsonWriter);
-
-if (!FFileHelper::SaveStringToFile(JsonString, *JsonPath)) {
-    return FExportResult{false, TEXT(""), TEXT("Failed to write JSON file")};
-}
-
-// 6. SPAWN PYTHON PROCESS
-FString PythonExe = TEXT("python");  // Assumes python is in PATH
-FString ScriptPath = FPaths::ProjectDir() / TEXT("Scripts/generate_pdf.py");
-FString Arguments = FString::Printf(TEXT("\"%s\" \"%s\""), *JsonPath, *PdfPath);
-
-void* ReadPipe = nullptr;
-void* WritePipe = nullptr;
-FPlatformProcess::CreatePipe(ReadPipe, WritePipe);
-
-FProcHandle ProcessHandle = FPlatformProcess::CreateProc(
-    *PythonExe,
-    *Arguments,
-    false,  // bLaunchDetached
-    true,   // bLaunchHidden
-    true,   // bLaunchReallyHidden
-    nullptr,  // OutProcessId
-    0,     // PriorityModifier
-    nullptr,  // OptionalWorkingDirectory
-    WritePipe,  // PipeWriteChild
-    ReadPipe   // PipeReadChild
-);
-
-if (!ProcessHandle.IsValid()) {
-    FPlatformProcess::ClosePipe(ReadPipe, WritePipe);
-    return FExportResult{false, TEXT(""), TEXT("Failed to spawn Python process")};
-}
-
-// 7. WAIT FOR COMPLETION
-FPlatformProcess::WaitForProc(ProcessHandle);
-int32 ReturnCode = 0;
-FPlatformProcess::GetProcReturnCode(ProcessHandle, &ReturnCode);
-FPlatformProcess::CloseProc(ProcessHandle);
-FPlatformProcess::ClosePipe(ReadPipe, WritePipe);
-
-// 8. VERIFY PDF WAS CREATED
-if (ReturnCode != 0) {
-    return FExportResult{
-        false, 
-        TEXT(""), 
-        FString::Printf(TEXT("Python script failed with code %d"), ReturnCode)
-    };
-}
-
-if (!FPaths::FileExists(PdfPath)) {
-    return FExportResult{
-        false, 
-        TEXT(""), 
-        TEXT("PDF file was not created")
-    };
-}
-
-// 9. SUCCESS
-return FExportResult{
-    true,
-    PdfPath,
-    TEXT("")
-};
-```
-
-**Key C++ Concepts Used:**
-- `TArray` - Dynamic array container
-- `TSharedPtr` - Smart pointer (reference counted)
-- `FString` - Unreal's string class
-- `FJsonObject` - JSON manipulation
-- `FPlatformProcess` - Cross-platform process management
-- `FPaths` - Path manipulation utilities
-- `FFileHelper` - File I/O utilities
-
----
-
-## Appendix: Complete API Reference
-
-### Blueprint Nodes
-
-#### Export Variant Sets to PDF
-
-**Category:** Configuration Export Library
-
-**Inputs:**
-- `Variant Sets Actor` (ALevelVariantSetsActor*) - Reference to variant sets actor in level
-- `Configuration Name` (String) - Name for this configuration export
-
-**Outputs:**
-- `Success` (Boolean) - True if export succeeded
-- `PDF Path` (String) - Full path to generated PDF
-- `Error Message` (String) - Error description if failed
-
-**Example Usage (Blueprint):**
-```
-[Get All Actors of Class] (LevelVariantSetsActor)
-    ↓
-[Get (index 0)]
-    ↓
-[Export Variant Sets to PDF]
-    Configuration Name: "MyConfiguration"
-    ↓
-[Branch]
-    True → [Print String] "Success!"
-    False → [Print String] Error Message
-```
-
-### Python API
-
-#### generate_pdf.py
-
-**Function:** `generate_pdf(json_path, pdf_path)`
-
-**Parameters:**
-- `json_path` (str) - Full path to input JSON file
-- `pdf_path` (str) - Full path for output PDF file
-
-**Returns:**
-- `bool` - True if successful, False if error
-
-**Raises:**
-- `FileNotFoundError` - JSON file doesn't exist
-- `json.JSONDecodeError` - Invalid JSON format
-- `OSError` - Cannot write PDF file
-
-**Command-line usage:**
-```bash
-python generate_pdf.py <json_path> <pdf_path>
-```
-
-**Example:**
-```bash
-python Scripts/generate_pdf.py Saved/Configurations/test.json Saved/PDFs/test.pdf
-```
-
-### C++ API
-
-#### UConfigurationExportLibrary
-
-**Header:** `Source/ProductConfigurator/Public/ConfigurationExportLibrary.h`
-
-**Class:** `UConfigurationExportLibrary : public UBlueprintFunctionLibrary`
-
-**Function:**
-```cpp
-UFUNCTION(BlueprintCallable, Category = "Configuration Export")
-static FExportResult ExportVariantSetsToPDF(
-    ALevelVariantSetsActor* VariantSetsActor,
-    FString ConfigurationName
-);
-```
-
-**Struct FExportResult:**
-```cpp
-USTRUCT(BlueprintType)
-struct FExportResult {
-    GENERATED_BODY()
-    
-    UPROPERTY(BlueprintReadOnly)
-    bool bSuccess;
-    
-    UPROPERTY(BlueprintReadOnly)
-    FString PDFPath;
-    
-    UPROPERTY(BlueprintReadOnly)
-    FString ErrorMessage;
-};
-```
-
-
-
----
-
-**Last Updated:** January 28, 2026  
-**For:** Complete Beginners AND Advanced Users  
-**Unreal Engine Version:** 5.5.4  
-**Python Version:** 3.8+  
+ #### Step 1: Get Epic Games Launcher
+
+ 1. Go to: https://www.epicgames.com/store/
+ 2. Click **"Get Epic Games"** in the top right
+ 3. Download and install the launcher
+ 4. Create an Epic Games account (free)
+
+ #### Step 2: Install Unreal Engine 5.5.4
+
+ 1. **Open Epic Games Launcher**
+ 2. Click **"Unreal Engine"** tab on the left
+ 3. Click **"Library"** at the top
+ 4. Click the **yellow "+" button** next to ENGINE VERSIONS
+ 5. Select **"5.5.4"** from the dropdown
+ 6. Click **"Install"**
+ 7. Choose install location (needs 40GB)
+ 8. Wait for download (can take 30min - 2 hours depending on internet speed)
+
+ #### Step 3: Verify Installation
+
+ 1. Once installed, you'll see "5.5.4" in your Library
+ 2. Click **"Launch"** next to 5.5.4
+ 3. Unreal Engine should open to the project browser
+ 4. Close it for now (we'll open your project next)
+
+ ---
+
+ ### Opening The Project
+
+ #### Step 1: Locate The Project Files
+
+ 1. Open **File Explorer** (Windows key + E)
+ 2. Navigate to: `F:\0personal\ProductConfigurator\`
+ 3. You should see these files:
+    - `ProductConfigurator.uproject` (Unreal Engine project file)
+    - `Content` folder (all 3D assets, levels, blueprints)
+    - `Saved` folder (exports go here)
+    - `Source` folder (C++ code)
+
+ #### Step 2: Open The Project
+
+ **Method 1 - Double Click:**
+ 1. Double-click `ProductConfigurator.uproject`
+ 2. Unreal Engine will launch automatically
+
+ **Method 2 - From Epic Games Launcher:**
+ 1. Open Epic Games Launcher
+ 2. Go to **Unreal Engine → Library**
+ 3. Click **"Add Existing"** (top right, small button)
+ 4. Browse to `F:\0personal\ProductConfigurator\ProductConfigurator.uproject`
+ 5. Click **"Open"**
+ 6. Project appears in your library - click **"Open"**
+
+ #### Step 3: Wait For Project To Load
+
+ 1. First time opening takes 2-5 minutes
+ 2. You'll see "Loading..." screens
+ 3. If asked to rebuild modules, click **"Yes"**
+ 4. If asked to convert/upgrade, click **"Skip"** (already correct version)
+
+ #### Step 4: You're In!
+
+ Once loaded, you should see:
+ - **Viewport** (big 3D window in center)
+ - **Content Browser** (bottom panel with folders)
+ - **Details Panel** (right side)
+ - **Outliner** (right side, shows all objects in scene)
+
+ ---
+
+ ### Understanding The Interface
+
+ Let me explain what you're looking at:
+
+ #### Main Areas (Think of it like Photoshop or Excel)
+
+ ```
+ ┌─────────────────────────────────────────────────────────┐
+ │  MENU BAR (File, Edit, Window, Tools...)               │
+ ├─────────────────────────────────────────────────────────┤
+ │  TOOLBAR (Play, Save, Build, etc.)                     │
+ ├────────────┬────────────────────────────┬───────────────┤
+ │            │                            │               │
+ │  OUTLINER  │      VIEWPORT (3D)         │   DETAILS     │
+ │            │                            │               │
+ │  (List of  │   Your 3D scene            │   (Properties │
+ │   objects) │   Shows the guitar         │    of         │
+ │            │                            │    selected   │
+ │            │                            │    object)    │
+ ├────────────┴────────────────────────────┴───────────────┤
+ │  CONTENT BROWSER (All your assets/files)                │
+ └─────────────────────────────────────────────────────────┘
+ ```
+
+
+
+ ---
+
+ ### Your First Export Test
+
+ Let's make sure the PDF export system works!
+
+ #### Step 1: Open The Main Level
+
+ 1. In **Content Browser** (bottom panel)
+ 2. Click on **"Content"** folder
+ 3. Navigate to: `ProductAssets → Levels`
+ 4. **Double-click** `Main` (shows a level icon)
+ 5. The guitar scene will load in the Viewport
+
+ #### Step 2: Open The Output Log
+
+ 1. Click **"Window"** in the menu bar (top)
+ 2. Hover over **"Developer Tools"**
+ 3. Click **"Output Log"**
+ 4. A new panel opens at the bottom
+ 5. This shows messages from Unreal (like a console)
+
+ #### Step 3: Open Python Console
+
+ 1. In the **Output Log** panel you just opened
+ 2. Look for tabs at the top: "Output Log" | "Message Log" | "Python"
+ 3. Click the **"Python"** tab
+ 4. You now have a Python command line
+
+ #### Step 4: Run The Test Code
+
+ 1. Copy this code EXACTLY (triple-click to select all):
+
+ ```python
+ import unreal
+
+ # Get the actor
+ actors = unreal.get_editor_subsystem(unreal.EditorActorSubsystem).get_all_level_actors()
+ variant_actor = None
+ for actor in actors:
+     if actor.get_class().get_name() == "LevelVariantSetsActor":
+         variant_actor = actor
+         break
+
+ if variant_actor:
+     print("✅ Found the guitar configurator!")
+     result = unreal.ConfigurationExportLibrary.export_variant_sets_to_pdf(
+         variant_actor,
+         "MyFirstTest"
+     )
+     success, pdf_path, error = result
+     if success:
+         print(f"✅✅✅ SUCCESS! PDF Created!")
+         print(f"Location: {pdf_path}")
+     else:
+         print(f"❌ Error: {error}")
+ else:
+     print("❌ Could not find LevelVariantSetsActor")
+ ```
+
+ 2. **Paste** into the Python console (Ctrl+V)
+ 3. **Press Enter**
+ 4. Wait 2-3 seconds
+
+ #### Step 5: Check The Results
+
+ You should see:
+ ```
+ ✅ Found the guitar configurator!
+ ✅✅✅ SUCCESS! PDF Created!
+ Location: ../../../../../0personal/ProductConfigurator/Saved/PDFs/MyFirstTest_2026-01-28_...pdf
+ ```
+
+ #### Step 6: Find Your PDF
+
+ 1. Open **File Explorer**
+ 2. Go to: `F:\0personal\ProductConfigurator\Saved\PDFs\`
+ 3. You'll see your PDF file!
+ 4. **Double-click to open it**
+
+ **What's Inside:**
+ - Configuration name: "MyFirstTest"
+ - Timestamp
+ - List of 11 variant sets with their current selections
+ - Example: "Body Color: Black", "Pickups: Black", etc.
+
+ ---
+
+ ## Part 2: Understanding The System
+
+ ---
+
+ ### How The Configurator Works
+
+ Think of it like building a custom pizza:
+
+ 1. **Base (3D Model):** The guitar in the scene
+ 2. **Toppings (Variants):** Different colors, shapes, parts you can swap
+ 3. **Menu (Variant Sets):** Groups of related options (like "Cheese Type", "Toppings", "Size")
+ 4. **Receipt (PDF Export):** Shows exactly what you picked
+
+ **Technical Flow:**
+ ```
+ User Clicks Option
+       ↓
+ Variant Manager Swaps 3D Parts
+       ↓
+ User Clicks "Export PDF"
+       ↓
+ System Reads Active Variants
+       ↓
+ Creates JSON File (data)
+       ↓
+ Python Converts JSON → PDF
+       ↓
+ PDF Saved To Disk
+ ```
+
+ ---
+
+ ### What Are Variant Sets?
+
+ **Simple Explanation:**
+ A Variant Set is a GROUP of related options where you can pick ONE at a time.
+
+ **Example: Body Color Variant Set**
+ - Contains: Black, White, Red, Blue, Sunburst, Natural, Pink, Metallic
+ - You can pick: ONE color at a time
+ - Picking "Red" automatically deselects "Black"
+
+ **Current Variant Sets In This Project:**
+
+ | Variant Set Name | What It Controls | Example Options |
+ |-----------------|------------------|-----------------|
+ | Lighting | Scene lighting mood | NeutralWarmCold, Bright, Dark |
+ | Camera | View angle | Overview, Close-up, Side View, Top View |
+ | Body Shape | Guitar body style | Strat Type, Les Paul Type, Telecaster Type |
+ | Body Color | Paint color | Black, White, Red, Sunburst, etc. |
+ | Hardware | Metal parts finish | Chrome, Gold, Black |
+ | Head Shape | Headstock design | Type A, Type B, Type C |
+ | Pickups | Pickup color | Black, White |
+ | Pick Guard | Guard color/style | Black, White, None |
+ | Fret Inlays | Fret marker style | Dots, Blocks, Pearl |
+ | Fret Board | Fretboard wood | Dark, Light, Maple |
+ | Tremolo | Tremolo arm | On, Off |
+
+ ---
+
+ ### What Does The Export Do?
+
+ The export system creates a **PDF report** showing the current configuration.
+
+ **What Gets Exported:**
+ - Which variant is currently ACTIVE in each set
+ - Timestamp of when export was created
+ - Configuration name you provide
+
+ **What Does NOT Get Exported:**
+ - Inactive variants
+ - Variants from multiple sets at once
+ - 3D model data or screenshots (just text list)
+
+ **Example Output:**
+ ```
+ Product Configuration Summary
+ Configuration: Guitar_Configuration
+ Timestamp: 2026-01-28 04:03:54
+
+ Selected Variants:
+   • Lighting: NeutralWarmCold
+   • Camera: Overview
+   • Body Shape: Strat Type
+   • Body Color: Black
+   • Hardware: Chrome
+   • Head Shape: Type A
+   • Pickups: Black
+   • Pick Guard: Black
+   • Fret Inlays: Pearl
+   • Fret Board: Light
+   • Tremolo: On
+ ```
+
+ ---
+
+ ## Part 3: Customizing For Your Product
+
+ ---
+
+ ### Swapping The Guitar Model For A Car
+
+ Let's replace the entire guitar with a car! This process works for ANY 3D model.
+
+ ---
+
+ #### PHASE 1: Prepare Your Car Model
+
+ ##### Step 1: Get Or Create A 3D Car Model
+
+ **Option A - Free Models:**
+ - **Quixel Bridge** (free, built into Unreal)
+ - **Unreal Engine Marketplace** (many free assets)
+ - **Sketchfab** (download as FBX)
+
+ **Option B - Your Own Model:**
+ - Export from: Blender, Maya, 3ds Max, etc.
+ - Format: **FBX** or **USD** (FBX is easier)
+ - Include materials/textures
+
+ **Requirements:**
+ - ✅ Clean geometry (no overlapping faces)
+ - ✅ Proper scale (real-world meters: car = ~4-5m long)
+ - ✅ Centered pivot point
+ - ✅ Materials applied
+
+ ##### Step 2: Import The Car Into Unreal
+
+ 1. Open your project in Unreal Engine
+ 2. In **Content Browser**, navigate to: `Content → ProductAssets`
+ 3. **Right-click** in empty space → **"Import to..."**
+ 4. Browse to your car model (`.fbx` file)
+ 5. **Import Settings Window Opens**
+
+ **Important Settings:**
+ - ✅ **Import Mesh:** Checked
+ - ✅ **Import Materials:** Checked
+ - ✅ **Import Textures:** Checked
+ - ⚠️ **Skeleton:** None (unless it's animated)
+ - ⚠️ **Auto Generate Collision:** Checked
+ - Click **"Import All"**
+
+ 6. Wait for import (can take 30 seconds)
+ 7. You'll see new assets appear:
+    - `Car_Model` (the mesh)
+    - `M_Car_Material` (materials)
+    - Textures
+
+ ##### Step 3: Test The Import
+
+ 1. **Drag the car mesh** from Content Browser into the Viewport
+ 2. It should appear in your scene
+ 3. Use **W, E, R keys** to move/rotate/scale
+ 4. Delete it for now (select and press Delete key)
+
+ ---
+
+ #### PHASE 2: Break Down The Car Into Parts
+
+ For the configurator to work, you need to separate customizable parts.
+
+ ##### Understanding Part Separation
+
+ **Example Guitar Breakdown:**
+ - Body (separate mesh)
+ - Neck (separate mesh)
+ - Pickups (separate mesh)
+ - Hardware (separate mesh)
+
+ **Example Car Breakdown:**
+ - Car Body (main)
+ - Wheels (4 separate or 1 swappable)
+ - Doors (left, right)
+ - Hood
+ - Trunk
+ - Bumpers (front, back)
+ - Interior (seats, dashboard)
+ - Windows
+
+ ##### Step 1: Check If Your Model Is Already Separated
+
+ 1. Import your car model
+ 2. **Double-click** the imported static mesh
+ 3. Static Mesh Editor opens
+ 4. Look at **left panel** → "Static Mesh Editor"
+ 5. Check "LOD 0" → "Elements"
+
+ **If you see multiple "Material Slots":**
+ - ✅ Model has multiple materials = partially separated
+ - You can work with this!
+
+ **If you see only 1 material:**
+ - ⚠️ Everything is one piece
+ - You'll need to separate it
+
+ ##### Step 2A: If Already Separated
+
+ Great! Your model has multiple material slots.
+
+ **What this means:**
+ - Different parts have different materials
+ - You can swap materials per part
+ - Example: Material Slot 0 = Body, Slot 1 = Wheels, Slot 2 = Windows
+
+ **Next:** Skip to Phase 3
+
+ ##### Step 2B: If NOT Separated (One Solid Mesh)
+
+ You'll need to split it into parts.
+
+ **Option 1 - Use Modeling Tools (Easier):**
+
+ 1. **Enable Modeling Tools Plugin:**
+    - Edit → Plugins
+    - Search "Modeling"
+    - Check "Modeling Tools Editor Mode"
+    - Restart Unreal Engine
+
+ 2. **Switch to Modeling Mode:**
+    - Top left of viewport → Click "Selection Mode" dropdown
+    - Select "Modeling" mode
+
+ 3. **Use PolyGroup Tools:**
+    - Select your car in viewport
+    - In left panel: "PolyGroup" tools
+    - Click "Auto Group" → "Generate"
+    - This separates by material/smoothing
+
+ 4. **Split to Separate Meshes:**
+    - Use "Separate" tool
+    - Choose polygroups to split out
+
+ **Option 2 - Go Back to 3D Software (Professional):**
+
+ 1. Open model in Blender/Maya/Max
+ 2. Separate parts manually (Select faces → Separate → By Material)
+ 3. Export each part as separate FBX
+ 4. Import back to Unreal
+
+ ---
+
+ #### PHASE 3: Create The Car Actor Blueprint
+
+ ##### Step 1: Create A New Blueprint
+
+ 1. In **Content Browser**
+ 2. Navigate to: `Content → ProductAssets`
+ 3. **Right-click** in empty space
+ 4. **"Blueprint Class"**
+ 5. Choose **"Actor"**
+ 6. Name it: `BP_Car` (or whatever you want)
+ 7. **Double-click** to open it
+
+ ##### Step 2: Add The Car Mesh Components
+
+ 1. Blueprint Editor opens
+ 2. Look at **left panel:** "Components"
+ 3. You'll see "DefaultSceneRoot"
+ 4. Click **"Add"** button (top left, green button)
+ 5. Search for "Static Mesh"
+ 6. Click **"Static Mesh"**
+ 7. A new component appears: "StaticMesh"
+
+ **Rename it:**
+ 1. **Right-click** "StaticMesh" in Components panel
+ 2. **"Rename"**
+ 3. Name it: `CarBody`
+ 4. Press Enter
+
+ **Assign The Mesh:**
+ 1. With `CarBody` selected
+ 2. Look at **Details Panel** (right side)
+ 3. Find "Static Mesh" property (near top)
+ 4. Click dropdown → select your imported car mesh
+ 5. The car appears in the Blueprint viewport!
+
+ ##### Step 3: Add More Components For Each Part
+
+ Repeat for each customizable part:
+
+ **Example - Adding Wheels:**
+ 1. Click **"Add"** → "Static Mesh"
+ 2. Rename to: `Wheel_FrontLeft`
+ 3. Assign wheel mesh in Details
+ 4. Use **Move Tool (W key)** to position it
+
+ **Add all parts:**
+ - CarBody (main mesh)
+ - Wheel_FrontLeft
+ - Wheel_FrontRight  
+ - Wheel_RearLeft
+ - Wheel_RearRight
+ - Hood
+ - Doors
+ - Bumper_Front
+ - Bumper_Rear
+ - (etc.)
+
+ **Tips:**
+ - Make sure each component is **child of DefaultSceneRoot**
+ - Use **Snap** tools to align precisely (top toolbar)
+ - Test scale by comparing to Unreal's default cube (1m cube)
+
+ ##### Step 4: Compile And Save
+
+ 1. Click **"Compile"** button (top left, big hammer icon)
+ 2. Wait for success message
+ 3. Click **"Save"** button (next to Compile)
+ 4. Close Blueprint Editor
+
+ ---
+
+ #### PHASE 4: Replace Guitar With Car In The Level
+
+ ##### Step 1: Open The Main Level
+
+ 1. Content Browser → `ProductAssets → Levels`
+ 2. Double-click `Main`
+
+ ##### Step 2: Find The Guitar Actor
+
+ 1. Look in **Outliner** (right panel)
+ 2. Find the guitar actor (might be named `BP_Guitar` or similar)
+ 3. **Click** to select it
+ 4. The guitar will highlight in viewport
+
+ ##### Step 3: Delete The Guitar
+
+ 1. With guitar selected
+ 2. Press **Delete** key
+ 3. Guitar disappears
+
+ ##### Step 4: Add Your Car
+
+ 1. In **Content Browser**, find your `BP_Car` blueprint
+ 2. **Drag** `BP_Car` into the viewport
+ 3. Drop it in the scene
+ 4. Use **W, E, R keys** to position/rotate/scale
+
+ **Position Tips:**
+ - Place at origin (0, 0, 0) for easy camera setup
+ - Make sure it's sitting on the ground
+ - Check all angles (Top, Side, Front views)
+
+ ##### Step 5: Save The Level
+
+ 1. Press **Ctrl + S**
+ 2. Or click "Save Current Level" in toolbar
+
+ ---
+
+ #### PHASE 5: Update The Variant Sets
+
+ Now we need to change variant sets from guitar options to car options.
+
+ ##### Step 1: Open Variant Manager
+
+ 1. Menu bar → **Window**
+ 2. Hover over **Cinematics**
+ 3. Click **Variant Manager**
+ 4. Panel opens (usually bottom of screen)
+
+ ##### Step 2: Find The Level Variant Sets Actor
+
+ 1. In **Outliner**, look for: `LevelVariantSetsActor`
+ 2. **Click** to select it
+ 3. In **Details Panel**, find "Level Variant Sets" property
+ 4. Note the asset: `/Game/ProductAssets/VariantSet`
+
+ ##### Step 3: Open The Variant Set Asset
+
+ **Method 1:**
+ 1. In Details, **double-click** the asset path
+ 2. Variant Set Editor opens
+
+ **Method 2:**
+ 1. Content Browser → `ProductAssets`
+ 2. Find `VariantSet` asset (has special icon)
+ 3. **Double-click** it
+
+ ##### Step 4: Delete Old Guitar Variant Sets
+
+ You'll see a list of variant sets on the left:
+ - Lighting
+ - Camera
+ - Body Shape
+ - Body Color
+ - (etc.)
+
+ **Delete the ones you don't need:**
+ 1. **Right-click** "Body Shape"
+ 2. **"Delete Variant Set"**
+ 3. Confirm: Click "Yes"
+ 4. Repeat for:
+    - Pickups
+    - Pick Guard
+    - Fret Inlays
+    - Fret Board
+    - Tremolo
+    - (any other guitar-specific sets)
+
+ **Keep these:**
+ - Lighting (universal)
+ - Camera (universal)
+
+ ##### Step 5: Create New Car Variant Sets
+
+ Let's add car-specific variant sets.
+
+ **Example: Body Color Variant Set**
+
+ 1. Click **"+ Variant Set"** button (top left)
+ 2. A new set appears: "Variant Set"
+ 3. **Right-click** it → "Rename"
+ 4. Type: `BodyColor`
+ 5. Press Enter
+
+ **Add Variants To It:**
+
+ 1. With `BodyColor` selected
+ 2. Click **"+ Variant"** button
+ 3. A new variant appears: "Variant"
+ 4. **Right-click** → "Rename" → Type: `Red`
+ 5. Repeat for other colors:
+    - Black
+    - White
+    - Blue
+    - Silver
+    - (etc.)
+
+ **Assign What Each Variant Changes:**
+
+ 1. Select the `Red` variant
+ 2. Look at the **bottom panel** (Captured Properties)
+ 3. Click **"+ Actor"**
+ 4. In the popup, select your `BP_Car` from the scene
+ 5. Click **"OK"**
+ 6. Another popup: "Capture Properties"
+ 7. **Expand** the CarBody component tree
+ 8. Find **"Material Overrides"** or **"Materials"**
+ 9. **Check** the box next to it
+ 10. Click **"OK"**
+
+ **Set The Material:**
+
+ 1. With Red variant still selected
+ 2. In Captured Properties, you'll see: `BP_Car → CarBody → Materials`
+ 3. Click the dropdown
+ 4. Select your red material (or create one first)
+
+ **Repeat For Other Variants:**
+ - Select `Black` variant → capture materials → set black material
+ - Select `White` variant → capture materials → set white material
+ - (etc.)
+
+ ##### Step 6: Create More Variant Sets
+
+ Repeat the process for:
+
+ **Wheel Style:**
+ - Sport Wheels
+ - Off-Road Wheels
+ - Classic Wheels
+
+ **Interior:**
+ - Leather Black
+ - Leather Brown
+ - Fabric Gray
+
+ **Trim:**
+ - Chrome
+ - Matte Black
+ - Carbon Fiber
+
+ **Etc.**
+
+ ##### Step 7: Test The Variants
+
+ 1. In Variant Manager, click different variants
+ 2. Watch the car update in the viewport
+ 3. Try different combinations
+ 4. Make sure everything works
+
+ ##### Step 8: Save Everything
+
+ 1. Click **Save** in Variant Manager
+ 2. Press **Ctrl + S** to save level
+ 3. Click **File → Save All** to save everything
+
+ ---
+
+ #### PHASE 6: Update The Export
+
+ The export should automatically work with your new variant sets!
+
+ ##### Test It:
+
+ 1. Open Python console (Window → Developer Tools → Output Log → Python tab)
+ 2. Run the test code from earlier:
+
+ ```python
+ import unreal
+
+ actors = unreal.get_editor_subsystem(unreal.EditorActorSubsystem).get_all_level_actors()
+ variant_actor = None
+ for actor in actors:
+     if actor.get_class().get_name() == "LevelVariantSetsActor":
+         variant_actor = actor
+         break
+
+ if variant_actor:
+     result = unreal.ConfigurationExportLibrary.export_variant_sets_to_pdf(
+         variant_actor,
+         "CarConfiguration"
+     )
+     success, pdf_path, error = result
+     if success:
+         print(f"✅ PDF Created: {pdf_path}")
+     else:
+         print(f"❌ Error: {error}")
+ ```
+
+ 3. Check the PDF - it should now list your car variant sets!
+
+ ---
+
+ ### Adding New Variant Sets
+
+ Let's say you want to add a "Spoiler" variant set.
+
+ #### Step-by-Step:
+
+ ##### Step 1: Create The Spoiler 3D Models
+
+ 1. Import 3 different spoiler designs as separate static meshes:
+    - `SM_Spoiler_Sport`
+    - `SM_Spoiler_GT`
+    - `SM_Spoiler_None` (empty/placeholder)
+
+ ##### Step 2: Add Spoiler To Your Car Blueprint
+
+ 1. Open `BP_Car` blueprint
+ 2. Add new Static Mesh component
+ 3. Name it: `Spoiler`
+ 4. Don't assign a mesh yet (variants will control this)
+ 5. Position where spoiler should be
+ 6. Compile and Save
+
+ ##### Step 3: Open Variant Set Editor
+
+ 1. Content Browser → `ProductAssets → VariantSet`
+ 2. Double-click to open
+
+ ##### Step 4: Create New Variant Set
+
+ 1. Click **"+ Variant Set"** button
+ 2. Rename to: `Spoiler`
+
+ ##### Step 5: Add Variants
+
+ 1. With Spoiler selected
+ 2. Add variant: `Sport` (+ Variant button)
+ 3. Add variant: `GT`
+ 4. Add variant: `None`
+
+ ##### Step 6: Capture The Spoiler Component
+
+ For each variant:
+
+ **Sport:**
+ 1. Select `Sport` variant
+ 2. Click **"+ Actor"** → select `BP_Car`
+ 3. In capture window, expand to find: `Spoiler → Static Mesh`
+ 4. **Check** the box
+ 5. Click OK
+ 6. In Captured Properties, set Static Mesh to: `SM_Spoiler_Sport`
+
+ **GT:**
+ 1. Select `GT` variant
+ 2. Repeat above, set to: `SM_Spoiler_GT`
+
+ **None:**
+ 1. Select `None` variant
+ 2. Repeat above, set to: `None` (empty)
+
+ ##### Step 7: Test
+
+ 1. Click each variant in Variant Manager
+ 2. Spoiler should swap in the viewport
+ 3. Save everything
+
+ ##### Step 8: Test Export
+
+ The export will now include "Spoiler: Sport" (or whichever is active)!
+
+ ---
+
+ ### Removing Variant Sets
+
+ Want to delete a variant set completely?
+
+ #### Step-by-Step:
+
+ 1. Open Variant Set Editor (double-click `VariantSet` asset)
+ 2. **Right-click** the variant set you want to remove (e.g., "Tremolo")
+ 3. Click **"Delete Variant Set"**
+ 4. Confirm: **"Yes"**
+ 5. Save the asset (Ctrl + S)
+
+ **That's it!** The export will automatically skip the deleted set.
+
+ ---
+
+ ### Editing Existing Variants
+
+ #### Renaming A Variant:
+
+ 1. Open Variant Set Editor
+ 2. Expand the variant set (e.g., "Body Color")
+ 3. **Right-click** the variant (e.g., "Black")
+ 4. **"Rename"**
+ 5. Type new name: "Midnight Black"
+ 6. Press Enter
+ 7. Save
+
+ #### Changing What A Variant Does:
+
+ 1. Select the variant
+ 2. Look at **Captured Properties** (bottom panel)
+ 3. Click on the property value (e.g., Material dropdown)
+ 4. Change to a different material
+ 5. Save
+
+ #### Adding More Options To Existing Set:
+
+ 1. Select the variant set (e.g., "Body Color")
+ 2. Click **"+ Variant"**
+ 3. Name it (e.g., "Lime Green")
+ 4. Capture properties as shown earlier
+ 5. Set the green material
+ 6. Save
+
+ ---
+
+ ### Organizing Your Project
+
+ As your project grows, stay organized!
+
+ #### Folder Structure Best Practices:
+
+ ```
+ Content/
+ ├── ProductAssets/
+ │   ├── Meshes/
+ │   │   ├── Car/
+ │   │   │   ├── Body/
+ │   │   │   ├── Wheels/
+ │   │   │   └── Interior/
+ │   │   └── Props/
+ │   ├── Materials/
+ │   │   ├── Car_BodyPaint/
+ │   │   ├── Car_Chrome/
+ │   │   └── Car_Glass/
+ │   ├── Textures/
+ │   ├── Blueprints/
+ │   │   ├── BP_Car
+ │   │   └── BP_CameraRig
+ │   ├── Levels/
+ │   │   └── Main
+ │   └── VariantSet
+ ```
+
+ #### Naming Conventions:
+
+ **Meshes:**
+ - Static Mesh: `SM_CarBody`
+ - Skeletal Mesh: `SK_Character`
+
+ **Materials:**
+ - Material: `M_CarPaint_Red`
+ - Material Instance: `MI_CarPaint_Red`
+
+ **Blueprints:**
+ - Actor: `BP_Car`
+ - Widget: `WBP_ExportButton`
+ - Function Library: `BPL_Utilities`
+
+ **Textures:**
+ - Base Color: `T_Car_BC`
+ - Normal: `T_Car_N`
+ - Roughness: `T_Car_R`
+
+ ---
+
+ ## Part 4: Advanced Customization
+
+ ---
+
+ ### Changing Where PDFs Are Saved
+
+ By default, PDFs save to: `F:\0personal\ProductConfigurator\Saved\PDFs\`
+
+ Let's change it to: `F:\MyCarExports\PDFs\`
+
+ #### Step 1: Install Visual Studio (If Not Already)
+
+ 1. Download Visual Studio 2022 Community
+ 2. During install, select "Game Development with C++"
+ 3. Install (takes 30min)
+
+ #### Step 2: Open The Project In Visual Studio
+
+ 1. Close Unreal Engine
+ 2. Navigate to: `F:\0personal\ProductConfigurator\`
+ 3. **Right-click** `ProductConfigurator.uproject`
+ 4. **"Generate Visual Studio project files"**
+ 5. Wait (30 seconds)
+ 6. A new file appears: `ProductConfigurator.sln`
+ 7. **Double-click** `ProductConfigurator.sln`
+ 8. Visual Studio opens
+
+ #### Step 3: Find The Export Code
+
+ 1. In Visual Studio, look at **Solution Explorer** (right panel)
+ 2. Expand: `ProductConfigurator → Source → ProductConfigurator → Private`
+ 3. **Double-click** `ConfigurationExportLibrary.cpp`
+ 4. File opens in editor
+
+ #### Step 4: Change The PDF Directory
+
+ 1. Press **Ctrl + F** (Find)
+ 2. Search for: `Saved/PDFs`
+ 3. You'll find a line (around line 91):
+
+ ```cpp
+ FString PDFDir = FPaths::ProjectDir() / TEXT("Saved/PDFs");
+ ```
+
+ 4. Change it to:
+
+ ```cpp
+ FString PDFDir = TEXT("F:/MyCarExports/PDFs");
+ ```
+
+ **Important Notes:**
+ - Use **forward slashes** `/` not backslashes `\`
+ - Keep `TEXT("...")` wrapper
+ - Can use `FPaths::ProjectDir()` for relative paths
+
+ #### Step 5: Also Change JSON Directory (Optional)
+
+ Search for: `Saved/Configurations`
+
+ Change line ~29:
+
+ ```cpp
+ FString SaveDir = TEXT("F:/MyCarExports/JSONFiles");
+ ```
+
+ #### Step 6: Save The File
+
+ 1. Press **Ctrl + S**
+ 2. File is saved
+
+ #### Step 7: Build The Project
+
+ 1. In Visual Studio, top menu: **Build**
+ 2. Click **"Build Solution"** (or press Ctrl + Shift + B)
+ 3. Watch **Output** panel (bottom)
+ 4. Wait for: "Build succeeded"
+ 5. Takes 1-3 minutes
+
+ #### Step 8: Launch Unreal From Visual Studio
+
+ 1. Make sure `ProductConfigurator` is set as startup project (bold in Solution Explorer)
+ 2. Press **F5** or click green **"Local Windows Debugger"** button
+ 3. Unreal Engine launches with your changes
+
+ #### Step 9: Test
+
+ 1. Run an export (Python console test)
+ 2. Check: `F:\MyCarExports\PDFs\`
+ 3. Your PDF should be there!
+
+ ---
+
+ ### Changing File Names
+
+ #### Current Format:
+ ```
+ Guitar_Configuration_2026-01-28_04-03-54.pdf
+ ```
+
+ #### Option 1: Remove Timestamp (Always Overwrite)
+
+ **Edit** `ConfigurationExportLibrary.cpp`:
+
+ Find (around line 31):
+
+ ```cpp
+ FString FileName = ConfigurationName.IsEmpty() 
+     ? FString::Printf(TEXT("Config_%s.json"), *GetFormattedTimestamp())
+     : FString::Printf(TEXT("%s_%s.json"), *ConfigurationName, *GetFormattedTimestamp());
+ ```
+
+ Change to:
+
+ ```cpp
+ FString FileName = ConfigurationName.IsEmpty() 
+     ? TEXT("Configuration.json")
+     : FString::Printf(TEXT("%s.json"), *ConfigurationName);
+ ```
+
+ **Result:**
+ - Always creates `CarConfiguration.json` and `CarConfiguration.pdf`
+ - Overwrites previous export
+
+ #### Option 2: Add User Name To Filename
+
+ ```cpp
+ FString UserName = FPlatformProcess::UserName();
+ FString FileName = FString::Printf(TEXT("%s_%s_%s.json"), 
+     *ConfigurationName, 
+     *UserName, 
+     *GetFormattedTimestamp());
+ ```
+
+ **Result:**
+ - `CarConfiguration_JohnDoe_2026-01-28_04-03-54.pdf`
+
+ #### After Editing:
+
+ 1. Save file (Ctrl + S)
+ 2. Build Solution (Ctrl + Shift + B)
+ 3. Launch Unreal (F5)
+ 4. Test export
+
+ ---
+
+ ### Customizing The PDF Layout
+
+ The PDF is generated by: `Scripts/generate_pdf.py`
+
+ #### Step 1: Open The Script
+
+ 1. Navigate to: `F:\0personal\ProductConfigurator\Scripts\`
+ 2. **Right-click** `generate_pdf.py`
+ 3. **"Edit with"** → Choose **Notepad** or **VS Code**
+
+ #### Step 2: Find The Layout Section
+
+ Look for lines like:
+
+ ```python
+ lines.append('(Product Configuration Summary) Tj')
+ lines.append('0 -25 Td /F1 11 Tf')
+ lines.append('(Configuration: %s) Tj' % escape(config.get('configurationName', 'N/A')))
+ ```
+
+ #### Step 3: Change The Title
+
+ Change:
+
+ ```python
+ lines.append('(Product Configuration Summary) Tj')
+ ```
+
+ To:
+
+ ```python
+ lines.append('(Car Configuration Report) Tj')
+ ```
+
+ #### Step 4: Add Your Company Name
+
+ After the title line, add:
+
+ ```python
+ lines.append('0 -18 Td')
+ lines.append('(My Company Name) Tj')
+ ```
+
+ #### Step 5: Save And Test
+
+ 1. Save the Python file
+ 2. Run an export from Unreal
+ 3. Check the PDF - it should have your changes!
+
+ **No rebuild needed** - Python scripts run directly.
+
+ ---
+
+ ## Part 5: Troubleshooting & Help
+
+ ---
+
+ ### Common Problems & Solutions
+
+ #### Problem 1: "Export Variant Sets To PDF node not found"
+
+ **Cause:** Blueprint reflection hasn't updated.
+
+ **Solution:**
+ 1. **Close** Unreal Engine completely (File → Exit)
+ 2. **Reopen** the project
+ 3. Open your Blueprint
+ 4. Search for the node again
+
+ ---
+
+ #### Problem 2: "No LevelVariantSets asset found"
+
+ **Cause:** LevelVariantSetsActor is missing or not configured.
+
+ **Solution:**
+ 1. Open your level
+ 2. Check **Outliner** for `LevelVariantSetsActor`
+ 3. If missing:
+    - **Drag** `LevelVariantSetsActor` from "Place Actors" panel
+    - In Details, assign your VariantSet asset
+ 4. If present:
+    - Select it
+    - Check "Level Variant Sets" property is assigned
+    - If empty, click dropdown → select `/Game/ProductAssets/VariantSet`
+
+ ---
+
+ #### Problem 3: PDF not created
+
+ **Cause 1:** Python not installed.
+
+ **Solution:**
+ 1. Open Command Prompt (Windows key + R, type `cmd`)
+ 2. Type: `python --version`
+ 3. If error: Install Python from python.org
+ 4. **Important:** Check "Add Python to PATH" during install
+
+ **Cause 2:** PDF script missing.
+
+ **Solution:**
+ 1. Check: `F:\0personal\ProductConfigurator\Scripts\generate_pdf.py`
+ 2. If missing, the file got deleted - need to restore
+
+ ---
+
+ #### Problem 4: Wrong variants exported
+
+ **Cause:** Different variant is active than you think.
+
+ **Solution:**
+ 1. Open **Variant Manager** (Window → Cinematics → Variant Manager)
+ 2. Check which variant is highlighted (active) in each set
+ 3. Click the variant you want
+ 4. Try export again
+
+ ---
+
+ #### Problem 5: Can't build in Visual Studio
+
+ **Error:** "MSB3073" or "C1083"
+
+ **Solution:**
+ 1. Close Unreal Engine
+ 2. Delete these folders:
+    - `Binaries`
+    - `Intermediate`
+    - `Saved` (warning: deletes your PDFs!)
+ 3. Right-click `.uproject` → "Generate Visual Studio project files"
+ 4. Open `.sln` in Visual Studio
+ 5. Build → Rebuild Solution
+
+ ---
+
+ #### Problem 6: Variant doesn't change anything
+
+ **Cause:** No properties captured.
+
+ **Solution:**
+ 1. Open Variant Set Editor
+ 2. Select the variant
+ 3. Check **Captured Properties** (bottom panel)
+ 4. If empty:
+    - Click **"+ Actor"**
+    - Select your car blueprint
+    - Capture the properties you want to change
+ 5. Save
+
+ ---
+
+ ### Where To Get Help
+
+ #### Official Resources:
+
+ **Unreal Engine Documentation:**
+ - https://docs.unrealengine.com/5.5/
+ - Start here for official guides
+
+ **Unreal Engine Forums:**
+ - https://forums.unrealengine.com/
+ - Ask questions, get help from community
+
+ **Unreal Engine Discord:**
+ - https://discord.gg/unreal-slackers
+ - Real-time chat with other developers
+
+ **YouTube Tutorials:**
+ - Search: "Unreal Engine 5 Variant Manager tutorial"
+ - Watch: Beginner Blueprint courses
+
+ #### Specific Topics:
+
+ **Learning Blueprints:**
+ - Search: "Unreal Engine Blueprint for beginners"
+ - Free course: Unreal Engine 5 Beginner Tutorial (YouTube)
+
+ **Variant Manager Deep Dive:**
+ - Epic Games: Variant Manager documentation
+ - Search: "Unreal Variant Manager complete guide"
+
+ **C++ Editing:**
+ - Unreal C++ documentation
+ - Book: "Unreal Engine 4 Game Development in 24 Hours"
+
+ #### Getting Unstuck:
+
+ **When asking for help, provide:**
+ 1. What you're trying to do
+ 2. What you expected to happen
+ 3. What actually happened
+ 4. Screenshots or error messages
+ 5. Your Unreal Engine version (5.5.4)
+
+ ---
+
+ ## Quick Reference Card
+
+
+ ### File Locations Quick Guide
+
+ | What | Where |
+ |------|-------|
+ | Project Root | `F:\0personal\ProductConfigurator\` |
+ | 3D Assets | `Content/ProductAssets/Meshes/` |
+ | Materials | `Content/ProductAssets/Materials/` |
+ | Blueprints | `Content/ProductAssets/Blueprints/` |
+ | Main Level | `Content/ProductAssets/Levels/Main` |
+ | Variant Sets | `Content/ProductAssets/VariantSet` |
+ | PDF Exports | `Saved/PDFs/` |
+ | JSON Exports | `Saved/Configurations/` |
+ | C++ Code | `Source/ProductConfigurator/` |
+ | PDF Script | `Scripts/generate_pdf.py` |
+
+ ### Variant Manager Workflow
+
+ ```
+ 1. Open Variant Manager (Window → Cinematics → Variant Manager)
+ 2. Create Variant Set (+ Variant Set button)
+ 3. Add Variants (+ Variant button)
+ 4. Capture Properties (+ Actor → select object → check properties)
+ 5. Set Values (edit in Captured Properties panel)
+ 6. Test (click variants to see changes)
+ 7. Save (Ctrl + S)
+ ```
+
+ ### Export Test Code (Keep Handy!)
+
+ ```python
+ import unreal
+
+ actors = unreal.get_editor_subsystem(unreal.EditorActorSubsystem).get_all_level_actors()
+ variant_actor = None
+ for actor in actors:
+     if actor.get_class().get_name() == "LevelVariantSetsActor":
+         variant_actor = actor
+         break
+
+ if variant_actor:
+     result = unreal.ConfigurationExportLibrary.export_variant_sets_to_pdf(
+         variant_actor,
+         "TestExport"
+     )
+     success, pdf_path, error = result
+     if success:
+         print(f"✅ Success: {pdf_path}")
+     else:
+         print(f"❌ Error: {error}")
+ ```
+
+ ---
+
+
+ ## Checklist: Your First Custom Configurator
+
+ Use this checklist to build your first car configurator:
+
+ - [ ] Install Unreal Engine 5.5.4
+ - [ ] Install Visual Studio 2022
+ - [ ] Install Python 3.x
+ - [ ] Open ProductConfigurator project
+ - [ ] Test PDF export with Python console
+ - [ ] Import car 3D model
+ - [ ] Create BP_Car blueprint
+ - [ ] Add car components (body, wheels, etc.)
+ - [ ] Place BP_Car in Main level
+ - [ ] Delete old guitar actor
+ - [ ] Open Variant Manager
+ - [ ] Delete guitar variant sets
+ - [ ] Create new "Body Color" variant set
+ - [ ] Add variants: Red, Black, White
+ - [ ] Capture car materials for each variant
+ - [ ] Test variants in Variant Manager
+ - [ ] Test PDF export with car
+ - [ ] Verify PDF shows car variants
+ - [ ] Save all assets
+ - [ ] Backup project folder
+ - [ ] Celebrate! 🎉
+
+ ---
+
+ **You're now ready to build amazing product configurators in Unreal Engine!**
+
+ Good luck, and remember: every expert was once a beginner. You've got this! 💪
+
+ ---
+
+ **Last Updated:** January 30, 2026  
+ **For:** Complete Beginners  
+ **Unreal Engine Version:** 5.5.4
+ 
